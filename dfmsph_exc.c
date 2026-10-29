@@ -4,17 +4,13 @@ double FUN_KFERMI(double r, long iNUC)
 {
 	static double kF;
 	rho=FUN_RHOtable(r,iNUC,0);
-	if(rho<1e-12) return(0.);
+	if(rho<alittle)rho=alittle;	/* cubic interpolation can undershoot to <0 in the far tail */
 	kF=pow(1.5*pi*pi*rho,0.6666666);
 	absGRADrho=sqrt(DrhoDr*DrhoDr);
-	LAPLACErho=D2rhoDr2 + (r > 1e-5 ? 2.*DrhoDr/r : 0.);
-	if(rho>1e-6)
-	{
-		kF+=5.*CS*absGRADrho*absGRADrho/rho/rho/3.;
-		if(r>0.2*(RP0*(-iNUC+1)+RT0*iNUC)) kF+=5.*LAPLACErho/rho/36.;
-	}
-	if(kF<0.){kF=0.;}
-	if(kF>6.25){kF=6.25;} /* Physical cap: kF <= 2.5 fm^-1 */
+	LAPLACErho=D2rhoDr2+2.*DrhoDr/r;
+	kF+=5.*CS*absGRADrho*absGRADrho/rho/rho/3.;
+	if(r>0.2*(RP0*(-iNUC+1)+RT0*iNUC)) kF+=5.*LAPLACErho/rho/36.;
+	if(kF<0.){printf("\n<<<<<<<< U_EXC: wrong kF=%9.2e >>>>>>>>>\n\n",kF);code_end=-51;return(1.);}
 	kF=sqrt(kF);
 	return(kF);
 }
@@ -93,27 +89,17 @@ double FUN_ZEX(double t, double s, long iNUC, long m)
 void FUN_HYEX()
 {
 	long it,is;
-	sup=Crup*(RP0 > RT0 ? RP0 : RT0);
-	tup=k_up;
-	for(is=1;is<ikGup;is++)
-	{
-		sssM[is]=kMdim[is]*sup/k_up;
-		sssP[is]=kPdim[is]*sup/k_up;
-	}
-	for(it=1;it<ikGup;it++)
-	{
-		tttM[it]=kMdim[it]*tup/k_up;
-		tttP[it]=kPdim[it]*tup/k_up;
-	}
-
 	for(iNUC=0;iNUC<2;iNUC++)
  	{
-		rup=Crup*(iNUC==0 ? RP0 : RT0);
+  		tup=k_up;
+		rup=sup=Crup*RT0;
   		  	
 		for(it=1;it<ikGup;it++)
   		{
+   			tttM[it]=kMdim[it]*tup/k_up;
    			for(is=1;is<ikGup;is++)
 			{
+				sssM[is]=kMdim[is]*sup/k_up;
 	  		 	hdimMM[it][is][iNUC]=FUN_HEX(tttM[it],sssM[is],iNUC);
 	  		 	if(fabs(alDD)>alittle)ydimMM[it][is][iNUC]=FUN_YEX(tttM[it],sssM[is],iNUC);
 	  			if(fabs( gDD)>alittle)
@@ -121,6 +107,7 @@ void FUN_HYEX()
 					zdimMM[it][is][iNUC][0]=FUN_ZEX(tttM[it],sssM[is],iNUC,1);
 	  				zdimMM[it][is][iNUC][1]=FUN_ZEX(tttM[it],sssM[is],iNUC,2);
 				}
+	  	 		sssP[is]=kPdim[is]*sup/k_up;
 	  			hdimMP[it][is][iNUC]=FUN_HEX(tttM[it],sssP[is],iNUC);
 	  	 		if(fabs(alDD)>alittle)ydimMP[it][is][iNUC]=FUN_YEX(tttM[it],sssP[is],iNUC);
 	  			if(fabs( gDD)>alittle)
@@ -129,8 +116,10 @@ void FUN_HYEX()
 	  				zdimMP[it][is][iNUC][1]=FUN_ZEX(tttM[it],sssP[is],iNUC,2);
 				}
 			}
+			tttP[it]=kPdim[it]*tup/k_up;
 			for(is=1;is<ikGup;is++)
 			{
+	 			sssM[is]=kMdim[is]*sup/k_up;
 	   			hdimPM[it][is][iNUC]=FUN_HEX(tttP[it],sssM[is],iNUC);
 	   			if(fabs(alDD)>alittle)ydimPM[it][is][iNUC]=FUN_YEX(tttP[it],sssM[is],iNUC);
 				if(fabs(gDD)>alittle)
@@ -138,6 +127,7 @@ void FUN_HYEX()
 					zdimPM[it][is][iNUC][0]=FUN_ZEX(tttP[it],sssM[is],iNUC,1);
 					zdimPM[it][is][iNUC][1]=FUN_ZEX(tttP[it],sssM[is],iNUC,2);
 				}
+   				sssP[is]=kPdim[is]*sup/k_up;
 				hdimPP[it][is][iNUC]=FUN_HEX(tttP[it],sssP[is],iNUC);
 				if(fabs(alDD)>alittle)ydimPP[it][is][iNUC]=FUN_YEX(tttP[it],sssP[is],iNUC);
 				if(fabs(gDD)>alittle)
@@ -154,11 +144,10 @@ void FUN_HYEX()
 void FUN_HCYEX()
 {
 	long it,is;
-	sup=Crup*(RP0 > RT0 ? RP0 : RT0);
-	tup=k_up;
 	for(iNUC=0;iNUC<2;iNUC++)
  	{
-		rup=Crup*(iNUC==0 ? RP0 : RT0);
+  		tup=k_up;
+		rup=sup=Crup*RT0;
 
 		typ=0;
 		for(it=1;it<ikGup;it++)
@@ -189,9 +178,7 @@ double FUN_VEX(double s)
 {
 	static double vex;
 	vex=0;if(fabs(s)<alittle)return(alittle);
-	vex = (aex1 > 0.0 ? Aex1*exp(-aex1*s)/aex1/s : 0.0)
-	    + (aex2 > 0.0 ? Aex2*exp(-aex2*s)/aex2/s : 0.0)
-	    + (aex3 > 0.0 ? Aex3*exp(-aex3*s)/aex3/s : 0.0);
+	else vex=Aex1*exp(-aex1*s)/aex1/s+Aex2*exp(-aex2*s)/aex2/s+Aex3*exp(-aex3*s)/aex3/s;
 	return(vex);
 }
 
@@ -294,9 +281,7 @@ double FUN_GCEX(double R, double s)
 double FUN_UEX(double El, double R)
 {
 	static double argB,jB0_k_R_ss,k_R,integ,IntP,IntM,ss,vex;
-	double dE = ECM - UDFP;
-	if (dE < 0.) dE = 0.;
-	k_R=sqrt(2./m_red)*m_nucleon/hbar*sqrt(dE);
+	k_R=sqrt(2./m_red)*m_nucleon/hbar*sqrt(fabs(ECM-UDFP));
 	integ=0;
 	for(is=1;is<ikGup;is++)
 	{
@@ -304,7 +289,17 @@ double FUN_UEX(double El, double R)
 		jB0_k_R_ss=1.;argB=k_R*ss;
 		if(fabs(argB)>alittle)
 		{
-			jB0_k_R_ss=sin(argB)/(argB);
+			if(ECM>UDFP)jB0_k_R_ss=sin(argB)/(argB);
+   			else
+   			{
+   				if(argB<500.) jB0_k_R_ss=(exp(argB)-exp(-argB))/2./argB;
+   				else
+   				{
+   					code_end=-125;printf("\n<<<<< code_end=%3ld <<<< bad argument for Bessel function = %9.2e \n",
+   						                                code_end,argB);
+   					return(-10.);
+   				}
+   			}
    		}
    	  	GexMdim[is]=FUN_GEX(R,ss);vex=FUN_VEX(ss);
    		IntM=GexMdim[is]*jB0_k_R_ss*vex*ss*ss;
@@ -312,7 +307,8 @@ double FUN_UEX(double El, double R)
    		jB0_k_R_ss=1.;argB=k_R*ss;
    		if(fabs(argB)>alittle)
 		{
-			jB0_k_R_ss=sin(argB)/(argB);
+			if(ECM>UDFP)jB0_k_R_ss=sin(argB)/(argB);
+   			else jB0_k_R_ss=(exp(argB)-exp(-argB))/2./argB;
 		}
    	  	GexPdim[is]=FUN_GEX(R,ss);
    		IntP=GexPdim[is]*jB0_k_R_ss*FUN_VEX(ss)*ss*ss;
@@ -327,9 +323,7 @@ double FUN_UEX(double El, double R)
 double FUN_UCEX(double El, double R)
 {
 	static double argB,jB0_k_R_ss,k_R,integ,IntP,IntM,ss,vCex;
-	double dE = ECM - UDFP;
-	if (dE < 0.) dE = 0.;
-	k_R=sqrt(2./m_red)*m_nucleon/hbar*sqrt(dE);
+	k_R=sqrt(2./m_red)*m_nucleon/hbar*sqrt(fabs(ECM-UDFP));
 	integ=0;
 	for(is=1;is<ikGup;is++)
 	{
@@ -337,7 +331,17 @@ double FUN_UCEX(double El, double R)
 		jB0_k_R_ss=1.;argB=k_R*ss;
 		if(fabs(argB)>alittle)
 		{
-			jB0_k_R_ss=sin(argB)/(argB);
+			if(ECM>UDFP)jB0_k_R_ss=sin(argB)/(argB);
+   			else
+   			{
+   				if(argB<500.) jB0_k_R_ss=(exp(argB)-exp(-argB))/2./argB;
+   				else
+   				{
+   					code_end=-126;printf("\n<<<<< code_end=%3ld <<<< bad argument for Bessel function = %9.2e \n",
+   						                                code_end,argB);
+   					return(-10.);
+   				}
+   			}
    		}
    	  	GCexMdim[is]=FUN_GCEX(R,ss);vCex=FUN_VCEX(ss);
    		IntM=GCexMdim[is]*jB0_k_R_ss*vCex*ss*ss;
@@ -345,7 +349,8 @@ double FUN_UCEX(double El, double R)
    		jB0_k_R_ss=1.;argB=k_R*ss;
    		if(fabs(argB)>alittle)
 		{
-			jB0_k_R_ss=sin(argB)/(argB);
+			if(ECM>UDFP)jB0_k_R_ss=sin(argB)/(argB);
+   			else jB0_k_R_ss=(exp(argB)-exp(-argB))/2./argB;
 		}
    	  	GCexPdim[is]=FUN_GCEX(R,ss);
    		IntP=GCexPdim[is]*jB0_k_R_ss*FUN_VCEX(ss)*ss*ss;

@@ -1,4 +1,4 @@
-import {
+import type {
   CalculationInput,
   CalculationOutput,
   NucleusConfig,
@@ -7,7 +7,7 @@ import {
   BarrierResult,
   FusionCrossSectionPoint,
   PresetReaction
-} from '../types/dfmsph';
+} from '../types/dfmsph.js';
 
 /* Constants */
 const E2 = 1.4399648;     /* e^2 in MeV fm */

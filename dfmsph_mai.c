@@ -206,7 +206,7 @@ int main()
 	for(RCM=RCCstart,ii=2;RCM>RCCfin;RCM-=RCCstep,ii++)
 	{
 		if(Utotdim[ii]>Utotdim[ii-1] && Utotdim[ii]>Utotdim[ii+1])
-		{BfusDFPsph=Utotdim[ii];r_bar=RCM;i_bar=ii;break;}  
+		{BfusDFPsph=Utotdim[ii];r_bar=RCMdim[ii];i_bar=ii;break;}	/* RCM is 2 steps behind ii here */  
 	}
 	
 	if(ZP>0)Hom=FUN_Hom();
@@ -245,7 +245,7 @@ void FUN_WS_DFP()
    		{
 	  		for(aWS=aWSmin;aWS<aWSmax;aWS+=aWSstep)
 			{
-		   		i1=0;
+		   		i1=0;chi2WS=0.;	/* reset accumulator for every (rWS,VWS,aWS) trial */
 				for(ii=0;ii<irup;ii+=deliR)
 				{
 					if(RCMdim[ii]>fRBfin*r_bar && RCMdim[ii]<fRBstart*r_bar)
@@ -281,7 +281,7 @@ void FUN_GK_DFP()
 				{
 					for(Aappr[2]=Amindim[2];Aappr[2]<Amaxdim[2];Aappr[2]+=Astepdim[2])
 					{
-						i1=0;
+						i1=0;chi2GK=0.;	/* reset accumulator for every trial */
 						for(ii=0;ii<irup;ii+=deliR)
 						{
 							if(RCMdim[ii]>fRBfin*r_bar && RCMdim[ii]<fRBstart*r_bar)

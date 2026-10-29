@@ -20,7 +20,7 @@ double FUN_Hom()
 	C2b=xx=((KK21-KK20)*KK36-(KK31-KK30)*KK25)/(KK24*KK36-KK35*KK25);
 	C3b=((KK21-KK20)*KK35-(KK31-KK30)*KK24)/(KK25*KK35-KK36*KK24);
 	M_red=m_nucleon*AP*AT/(AP+AT);
-	xx=hbar*sqrt(fabs(xx)/M_red);
+	xx=hbar*sqrt(2.*fabs(xx)/M_red);	/* U = B + C2b*x^2 = B - mu*omega^2*x^2/2 */
 	return (xx);
 }
 
@@ -250,13 +250,8 @@ double FUN_DFPFIN(double rCC)
 	Umem=UDFP;
 	UND=FUN_UNDIR(0.,k_up);
 	if(ZP>0)UCD=FUN_UC00(0.,k_up);
-	if(iter==0)
-	{
-		Uex=FUN_UNEXCDEL(0.,k_up);
-		UCex=0.;
-	}
-	UN=UND+Uex;
-	if(ZP>0)UC=UCD+UCex;else UC=UCD;
+	if(iter>0)UN=UND+Uex;else UN=UND;
+	if(iter>0)UC=UCD+UCex;else UC=UCD;
 	UDFP=UN+UC;
 	Uex=FUN_UEX(Elab,rCC);
 	UCex=FUN_UCEX(Elab,rCC);

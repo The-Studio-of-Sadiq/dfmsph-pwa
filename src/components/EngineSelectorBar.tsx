@@ -150,7 +150,7 @@ export const EngineSelectorBar: React.FC<EngineSelectorBarProps> = ({
             </span>{' '}
             <span className="underline decoration-dashed font-semibold">
               {selectedEngine === 'c'
-                ? 'Native C Compiler Engine (dfmsph22.c -> gcc binary)'
+                ? 'Native C Engine (dfmsph22.c compiled to WebAssembly)'
                 : 'JavaScript / TypeScript Engine (dfmsphEngine.ts)'}
             </span>
           </div>

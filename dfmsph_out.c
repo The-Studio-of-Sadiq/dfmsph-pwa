@@ -61,7 +61,7 @@ void FUN_DFPOUT()
 
     f_ex2=fopen(outUR,"w");
    	fprintf(f_ex2,"  RCM          UN%d          UC   Utot%d     UNWSfit     UNGKfit",key_vNN,NUM);
-   	for(ii=0;ii<irup;ii+=10){
+   	for(ii=0;ii<irup;ii++){	/* every grid point, so the web UI can plot the full curve */
 		fprintf(f_ex2,"\n%6.2f %12.4e %12.4e %12.4e %12.4e %12.4e ",
 				RCMdim[ii],UNdim[ii],UCdim[ii],Utotdim[ii],
 				FUN_WSPOT(RCMdim[ii],AP13+AT13,VWSmem,rWSmem,aWSmem),
