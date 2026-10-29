@@ -31,6 +31,8 @@ export default function App() {
       .then((data) => {
         if (data && data.cEngineAvailable) {
           setCEngineAvailable(true);
+          /* Prefer the real DFMSPH22 C code whenever the server can run it */
+          setSelectedEngine('c');
         }
       })
       .catch(() => {

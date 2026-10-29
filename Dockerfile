@@ -1,45 +1,26 @@
-# Multi-stage Dockerfile for DFMSPH22 PWA Application on Render / Container Cloud
+# Multi-stage Dockerfile for DFMSPH22 PWA (Render / any container host)
+# The C engine ships precompiled as engine/dfmsph22.wasm, so no C compiler is needed.
 FROM node:20-slim AS builder
 
-# Install C compiler gcc & make
-RUN apt-get update && apt-get install -y gcc make && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
-
-# Copy package descriptors
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci || npm install
-
-# Copy full application codebase
 COPY . .
 
-# Compile dfmsph22.c binary for native execution
-RUN gcc -O3 -std=c99 dfmsph22.c -lm -o dfmsph22
-
-# Build Vite frontend and Express bundled server.cjs
+# Build Vite frontend and bundled Express server (dist/server.cjs)
 RUN npm run build
 
-# Production Runtime Container
 FROM node:20-slim AS runner
 
-# Install GCC runtime libraries
-RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
-
-# Copy compiled artifacts from builder
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/dfmsph22 ./dfmsph22
-COPY --from=builder /app/dfmsph22.c ./dfmsph22.c
+COPY --from=builder /app/engine ./engine
+COPY --from=builder /app/*.c /app/*.h ./
 
-# Set environment
 ENV NODE_ENV=production
 ENV PORT=10000
-
 EXPOSE 10000
 
 CMD ["npm", "start"]
